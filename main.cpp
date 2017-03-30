@@ -62,7 +62,7 @@ public:
 		{
             for(int j=0; j < tape.data[i].size(); ++j)
             {
-                cout << i << ' ' << j << ' ' << tape.data[i][j] << " " << endl;
+				cout << tape.data[i][j] << " " << endl;
             }
             cout << endl;
 		}
@@ -114,9 +114,11 @@ int main()
 
     vector<int> data;
 
-    for(int i = 0; i < 1000; i++)
+	cout << "BEFORE SORTING: " << endl;
+	for(int i = 0; i < 100; i++)
     {
-        data.push_back(rand() % 10);
+		data.push_back(rand() % 1000);
+		cout << data.back() << endl;
     }
 
 	//add tapes
@@ -125,9 +127,8 @@ int main()
 		tapes.push_back(Tape());
     }
 
-    int startTape = 0;
-    int iterations = pow((log(data.size())/log(NUM_OF_TAPES - 1) + 0.5), 2) - 1;
-    for(int k = 0; k < iterations; ++k)
+	int startTape = 0;
+	while(!data.empty())
     {
         //select data and write to tapes
         for(int i = startTape; i < startTape + NUM_OF_TAPES - 1 && !data.empty(); ++i)
@@ -154,9 +155,7 @@ int main()
     }
 
     //final merge
-    while(count_if(tapes.begin(),tapes.end(), [] (Tape tape) {
-                   return !tape.data.empty();
-    }) != 1)
+	if(count_if(tapes.begin(),tapes.end(), [] (Tape tape) { return !tape.data.empty(); }) > 1)
     {
         int tape_to_merge = (startTape + NUM_OF_TAPES - 1) % NUM_OF_TAPES;
         for(int i = startTape; i < startTape + NUM_OF_TAPES - 1; ++i)
@@ -167,8 +166,8 @@ int main()
 
             cout << "Merge data from tape #" << selected_tape << " to tape #" << tape_to_merge << endl;
         }
-    }
-
+	}
+	cout << "AFTER SORTING (TAPES STATE): " << endl;
     PrintTapes(tapes);
 
 	return 0;
