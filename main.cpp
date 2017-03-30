@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -9,26 +10,61 @@ static int NUM_OF_TAPES = 5;
 class Tape
 {
 public:
-	vector<int> data;
-	int max_size;
+    vector<vector<int>> data;
 
-	Tape()
+    Tape() {}
+
+    void SetNewData(int data)
+    {
+        vector<int> new_data { data };
+        this->data.push_back(new_data);
+    }
+
+    void SetNewData(vector<int> data)
 	{
-		max_size = 0;
+        this->data.push_back(data);
 	}
 
-	void SetNewData(int data)
-	{
-		this->data.push_back(data);
+    vector<int> Pop()
+    {
+        vector<int> tmp;
+        if(data.size() > 0)
+        {
+            tmp = data.back();
+            data.pop_back();
+        }
+        else
+        {
+            tmp = vector<int>();
+        }
+        return tmp;
+    }
 
-		max_size = max_size < 1 ? 1 : max_size;
-	}
+    vector<int> GetData()
+    {
+        if(data.size() > 0)
+            return data.back();
+        else
+            return vector<int>();
+    }
+
+    void ChangeBack(vector<int> new_vector)
+    {
+        if(data.size() > 0)
+            data.pop_back();
+
+        data.push_back(new_vector);
+    }
 
 	friend ostream& operator<< (ostream& out,const Tape& tape)
 	{
 		for(int i=0; i < tape.data.size(); ++i)
 		{
-			cout << tape.data[i] << " " << endl;
+            for(int j=0; j < tape.data[i].size(); ++j)
+            {
+                cout << i << ' ' << j << ' ' << tape.data[i][j] << " " << endl;
+            }
+            cout << endl;
 		}
 
 		return out;
@@ -39,6 +75,7 @@ void PrintTapes(vector<Tape> tapes)
 {
 	for(int i=0; i< tapes.size(); ++i)
 	{
+        cout << "TAPE " << i << endl;
 		cout << tapes[i];
 	}
 }
@@ -49,9 +86,9 @@ vector<int> merge(vector<int> a, vector<int> b)
 	bool deleted = false;
 	for(auto i = a.begin(); i != a.end(); (!deleted && i != a.end()) ? ++i : i)
 	{
-		for(auto j = b.begin(); j != b.end() && i != a.end(); !deleted ? ++j : j, deleted = false)
+        for(auto j = b.begin(); j != b.end() && i != a.end(); !deleted ? ++j : j, deleted = false)
 		{
-			if(*i < *j)
+            if(*i < *j)
 			{
 				result_vector.push_back(*i);
 				i = a.erase(i);
@@ -75,66 +112,64 @@ int main()
 {
 	vector<Tape> tapes;
 
-	vector<int> data = {3,5,3000,7000,12000,1,123,12,31,23,123,12,35,34,123123,34,45,12,34};
+    vector<int> data;
+
+    for(int i = 0; i < 1000; i++)
+    {
+        data.push_back(rand() % 10);
+    }
 
 	//add tapes
 	for(int i = 0; i < NUM_OF_TAPES; ++i)
 	{
 		tapes.push_back(Tape());
-	}
+    }
 
-	tapes[NUM_OF_TAPES - 1].data = vector<int>();
+    int startTape = 0;
+    int iterations = pow((log(data.size())/log(NUM_OF_TAPES - 1) + 0.5), 2) - 1;
+    for(int k = 0; k < iterations; ++k)
+    {
+        //select data and write to tapes
+        for(int i = startTape; i < startTape + NUM_OF_TAPES - 1 && !data.empty(); ++i)
+        {
+            int selected_tape = i % NUM_OF_TAPES;
+            tapes[selected_tape].SetNewData(data.back());
+            data.pop_back();
 
-	int level = 0;
-	//start sorting
-	while (data.size() > 0)
-	{
-		//fill
-		if(data.size() < NUM_OF_TAPES - 1)
-		{
-			int data_stored = data.size();
-			for(int i = 0; i < data.size(); ++i)
-			{
-				tapes[i].SetNewData(data[data.size() - 1]);
-				data.pop_back();
-			}
+            cout << "Write data to tape #" << selected_tape << endl;
+        }
 
-			for(int i = 0; i < data_stored; ++i)
-			{
-				tapes[NUM_OF_TAPES - 1].data = merge(tapes[NUM_OF_TAPES - 1].data, tapes[i].data);
-				tapes[i].data.clear();
-			}
-		}
-		else
-		{
-			for(int i = 0; i < NUM_OF_TAPES - 1 && data.size() != 0; ++i)
-			{
-				tapes[i].SetNewData(data[data.size() - 1]);
-				data.pop_back();
-			}
-			//merge
-			//..select max level of merge
-			int max_level_of_merge = pow(NUM_OF_TAPES-1,level);
-			for(int i = 0, j = 0; i <= max_level_of_merge; i = pow(NUM_OF_TAPES-1,j), ++j)
-			{
-				int count_on_level = count_if(tapes.begin(),tapes.end(),[=] (Tape a)
-				{
-					return a.max_size == i;
-				});
+        //merge data
+        int tape_to_merge = (startTape + NUM_OF_TAPES - 1) % NUM_OF_TAPES;
+        for(int i = startTape; i < startTape + NUM_OF_TAPES - 1; ++i)
+        {
+            int selected_tape = i % NUM_OF_TAPES;
+            tapes[tape_to_merge].ChangeBack(merge(tapes[tape_to_merge].GetData(),
+                                                  tapes[selected_tape].Pop()));
 
-				if(count_on_level == NUM_OF_TAPES - 1)
-				{
-					for (int var = 0; var < count_on_level; ++var) {
-						tapes[NUM_OF_TAPES - 1].data = merge(tapes[NUM_OF_TAPES - 1].data, tapes[var].data);
-						tapes[var].data.clear();
-					}
-				}
-			}
-			++level;
-		}
-	}
+            cout << "Merge data from tape #" << selected_tape << " to tape #" << tape_to_merge << endl;
+        }
 
-	PrintTapes(tapes);
+        startTape++;
+    }
+
+    //final merge
+    while(count_if(tapes.begin(),tapes.end(), [] (Tape tape) {
+                   return !tape.data.empty();
+    }) != 1)
+    {
+        int tape_to_merge = (startTape + NUM_OF_TAPES - 1) % NUM_OF_TAPES;
+        for(int i = startTape; i < startTape + NUM_OF_TAPES - 1; ++i)
+        {
+            int selected_tape = i % NUM_OF_TAPES;
+            tapes[tape_to_merge].ChangeBack(merge(tapes[tape_to_merge].GetData(),
+                                                  tapes[selected_tape].Pop()));
+
+            cout << "Merge data from tape #" << selected_tape << " to tape #" << tape_to_merge << endl;
+        }
+    }
+
+    PrintTapes(tapes);
 
 	return 0;
 }
