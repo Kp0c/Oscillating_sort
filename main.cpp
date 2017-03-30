@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <cmath>
 
 using namespace std;
 
@@ -115,7 +114,7 @@ int main()
     vector<int> data;
 
 	cout << "BEFORE SORTING: " << endl;
-	for(int i = 0; i < 100; i++)
+	for(int i = 0; i < 20; i++)
     {
 		data.push_back(rand() % 1000);
 		cout << data.back() << endl;
